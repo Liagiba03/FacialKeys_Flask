@@ -1,0 +1,9 @@
+Flask==3.0.3
+google-api-python-client==2.149.0
+google-auth==2.35.0
+google-auth-oauthlib==1.2.1
+matplotlib==3.9.2
+mediapipe==0.10.15
+numpy==1.26.4
+opencv-contrib-python==4.10.0.84
+pillow==11.0.0
