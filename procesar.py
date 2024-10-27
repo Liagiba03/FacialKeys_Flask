@@ -1,14 +1,25 @@
 import sys
 import json
+import os
+from dotenv import load_dotenv
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
+# Cargar las variables de entorno desde .env
+load_dotenv()
+
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-KEY = 'key.json'
 SPREADSHEET_ID = '1R1-RdZw7W5y3h3LtZDyOoREenlU-ghKv30pCJE8XeN4'
 
+credentials_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
+if credentials_json is None:
+    raise ValueError("La variable de entorno GOOGLE_CREDENTIALS_JSON no está definida.")
+
+credentials_dict = json.loads(credentials_json)
+creds = service_account.Credentials.from_service_account_info(credentials_dict, scopes=SCOPES)
+
 def proceso():
-    creds = service_account.Credentials.from_service_account_file(KEY, scopes=SCOPES)
+    
     service = build('sheets', 'v4', credentials=creds)
     sheet = service.spreadsheets()
     
