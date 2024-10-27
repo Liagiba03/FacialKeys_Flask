@@ -15,9 +15,16 @@
     </style>
 </head>
 <body>
+     <!-- Navbar -->
+     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">Subir imagen</a>
+        </div>
+    </nav>
+
     <div class="container mt-5">
         <div class="card p-4 shadow-sm">
-            <h1 class="text-center">Subir imagen para predecir puntos clave del rostro</h1>
+            <h2 class="text-center">Selecciona una imagen para colocar puntos clave del rostro</h2>
             <form action="{{ url_for('procesar') }}" method="POST" enctype="multipart/form-data" class="mt-4">
                 <div class="form-group custom-file">
                     <input type="file" name="file" class="form-control-file" accept="image/*" required>
