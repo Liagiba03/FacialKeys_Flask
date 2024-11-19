@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template
-from PIL import Image
+from PIL import Image, ImageEnhance, ImageOps
 import numpy as np
 import json
 import subprocess
@@ -153,6 +153,16 @@ def procesar():
 
         # Convertir la imagen a PIL para redimensionar
         img_pil = Image.fromarray(img)
+
+        # Aumentar el brillo de la imagen
+        enhancer = ImageEnhance.Brightness(img_pil)
+        img_pil = enhancer.enhance(1.5)  # Ajusta el valor del brillo (1.0 es sin cambio, >1 aumenta)
+
+        # Voltear la imagen horizontalmente
+        img_pil = ImageOps.mirror(img_pil)
+
+        # Voltear la imagen de cabeza
+        img_pil = ImageOps.flip(img_pil)
 
         # Crear la figura de Matplotlib
         buf = io.BytesIO()
