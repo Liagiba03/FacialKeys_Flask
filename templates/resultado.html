@@ -41,13 +41,42 @@
     <div class="container">
         <h1 class="text-center mb-4">Resultados del mapeo</h1>
         
-        <div class="card">
-            <div class="card-body text-center">
-                <h2 class="card-title mb-4">Imagen con puntos clave</h2>
-                <img src="data:image/png;base64,{{ img_data }}" alt="Predicted Key Points" class="img-fluid preview-img">
+        <div class="row">
+            <div class="col-md-6 col-lg-3">
+                <div class="card mb-4">
+                    <img src="data:image/png;base64,{{ images_data['original'] }}" alt="Imagen Original" class="img-fluid">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Original</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card mb-4">
+                    <img src="data:image/png;base64,{{ images_data['brillo'] }}" alt="Aumento de Brillo" class="img-fluid">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Aumento de Brillo</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card mb-4">
+                    <img src="data:image/png;base64,{{ images_data['horizontal'] }}" alt="Volteo Horizontal" class="img-fluid">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Volteo Horizontal</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card mb-4">
+                    <img src="data:image/png;base64,{{ images_data['vertical'] }}" alt="Volteo Vertical" class="img-fluid">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Volteo Vertical</h5>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+    
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 </body>

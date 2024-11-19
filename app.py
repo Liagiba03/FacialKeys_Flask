@@ -102,86 +102,64 @@ def index():
 
 @app.route('/procesar', methods=['POST'])
 def procesar():
-    img_data = None
-    # Comprobar si el archivo fue incluido en la solicitud
-    if 'file' not in request.files:
-        print("No se encontró 'file' en request.files")
-        return 'No se ha proporcionado ningún archivo.'
-
-    file = request.files['file']
-    
-    # Verificar si el archivo tiene un nombre válido
-    if file.filename == '':
-        print("El archivo no tiene un nombre")
-        return 'No se ha seleccionado ningún archivo.'
-
+    images_data = {}
     try:
+        # Verificar si el archivo fue incluido en la solicitud
+        if 'file' not in request.files:
+            return 'No se ha proporcionado ningún archivo.'
+
+        file = request.files['file']
+
+        # Verificar si el archivo tiene un nombre válido
+        if file.filename == '':
+            return 'No se ha seleccionado ningún archivo.'
+
         # Leer y abrir la imagen
         img = Image.open(file)
         img = img.resize((96, 96))  # Redimensionar la imagen a 96x96
-        img = img.convert('L')
-        img = np.array(img)
-        img_str = img.flatten().tolist()  # Convertir la matriz a lista plana
+        img = img.convert('L')  # Convertir a escala de grises
 
-        # Obtener la matriz de puntos clave de la imagen
-        key_points, key_points2 = puntos(img, img_str)
+        # Convertir la imagen a un array para detección de puntos clave
+        img_np = np.array(img)
+        img_str = img_np.flatten().tolist()  # Convertir a lista plana
 
-        # Convertir el diccionario a una cadena JSON
-        key_points_json = json.dumps(key_points)
+        # Obtener los puntos clave de la imagen
+        key_points, key_points2 = puntos(img_np, img_str)
 
-        # Llamar a procesar.py y pasarle los datos JSON en el argumento
-        result = subprocess.run(
-            ['python3', 'procesar.py'],
-            input=key_points_json,  # Envía JSON a través de la entrada estándar
-            capture_output=True,
-            text=True
-        )
-
-        if result.returncode != 0:
-            print("Error en la ejecución de procesar.py:", result.stderr)
-            return f"Error en la ejecución: {result.stderr}"
-
-        # Mostrar salida de procesar.py en la consola
-        datos = result.stdout
-        print("resultado:", result.stdout)
-
-        # INICIO GRAFICAR
-        # Dibujar las cruces rojas en la imagen
+        # Dibujar las cruces rojas en los puntos clave
         for point in key_points2.values():
-            cv2.drawMarker(img, point, color=(0, 0, 255), markerType=cv2.MARKER_CROSS, 
-                        markerSize=3, thickness=1, line_type=cv2.LINE_AA)
+            cv2.drawMarker(img_np, point, color=(0, 0, 255), markerType=cv2.MARKER_CROSS, 
+                           markerSize=3, thickness=1, line_type=cv2.LINE_AA)
 
-        # Convertir la imagen a PIL para redimensionar
-        img_pil = Image.fromarray(img)
+        # Convertir la imagen con puntos clave a PIL
+        img_with_points = Image.fromarray(img_np)
 
-        # Aumentar el brillo de la imagen
-        enhancer = ImageEnhance.Brightness(img_pil)
-        img_pil = enhancer.enhance(1.5)  # Ajusta el valor del brillo (1.0 es sin cambio, >1 aumenta)
+        # Efecto 1: Aumentar el brillo
+        enhancer = ImageEnhance.Brightness(img_with_points)
+        img_brightness = enhancer.enhance(1.5)
 
-        # Voltear la imagen horizontalmente
-        img_pil = ImageOps.mirror(img_pil)
+        # Efecto 2: Voltear horizontalmente
+        img_flip_horizontal = ImageOps.mirror(img_with_points)
 
-        # Voltear la imagen de cabeza
-        img_pil = ImageOps.flip(img_pil)
+        # Efecto 3: Voltear de cabeza
+        img_flip_vertical = ImageOps.flip(img_with_points)
 
-        # Crear la figura de Matplotlib
-        buf = io.BytesIO()
-        plt.imshow(img_pil, cmap='gray')  # Asegúrate de que se muestra en escala de grises
-        plt.savefig(buf, format='png', bbox_inches='tight', pad_inches=0)
-        buf.seek(0)
-        plt.close()
-
-        # Convertir la imagen a base64 para poder mostrarla en el HTML
-        img_data = base64.b64encode(buf.getvalue()).decode('ascii')
-        # FIN GRAFICAR
+        # Convertir cada imagen a base64 para el template
+        for key, processed_img in zip(
+            ['original', 'brillo', 'horizontal', 'vertical'],
+            [img_with_points, img_brightness, img_flip_horizontal, img_flip_vertical]
+        ):
+            buf = io.BytesIO()
+            processed_img.save(buf, format='PNG')
+            buf.seek(0)
+            images_data[key] = base64.b64encode(buf.getvalue()).decode('ascii')
 
     except Exception as e:
-        print(f"Error al procesar la imagen: {str(e)}")
         return f"Error al procesar la imagen: {str(e)}"
 
-    
-    # Renderizar resultado.html y pasar la imagen generada
-    return render_template('resultado.html', img_data=img_data)
+    # Pasar las imágenes generadas al template
+    return render_template('resultado.html', images_data=images_data)
+
 
 
 if __name__ == '__main__':

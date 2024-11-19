@@ -11,14 +11,14 @@ load_dotenv()
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 SPREADSHEET_ID = '1R1-RdZw7W5y3h3LtZDyOoREenlU-ghKv30pCJE8XeN4'
 #PARA DEPLOYAR USAR:
-credentials_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
-#KEY = 'key.json'
-if credentials_json is None:
-    raise ValueError("La variable de entorno GOOGLE_CREDENTIALS_JSON no está definida.")
+#credentials_json = os.getenv("GOOGLE_CREDENTIALS_JSON")
+KEY = 'key.json'
+#if credentials_json is None:
+#    raise ValueError("La variable de entorno GOOGLE_CREDENTIALS_JSON no está definida.")
 
-credentials_dict = json.loads(credentials_json)
-creds = service_account.Credentials.from_service_account_info(credentials_dict, scopes=SCOPES)
-#creds = service_account.Credentials.from_service_account_file(KEY, scopes=SCOPES)
+#credentials_dict = json.loads(credentials_json)
+#creds = service_account.Credentials.from_service_account_info(credentials_dict, scopes=SCOPES)
+creds = service_account.Credentials.from_service_account_file(KEY, scopes=SCOPES)
 
 def proceso():
     
