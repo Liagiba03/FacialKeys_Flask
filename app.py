@@ -1,23 +1,44 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, redirect
 from PIL import Image, ImageEnhance, ImageOps
 import numpy as np
-import json
+import json, requests
 import subprocess
 import mediapipe as mp
 import cv2
 import matplotlib.pyplot as plt
 import base64
 import io
+import os
 
 # Configurar Matplotlib para que use el backend 'Agg'
 import matplotlib
+headers = {"content-type": "application/json"}
 matplotlib.use('Agg')
 
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = 'static/uploads/'
+
+# Diccionario para mapear etiquetas a emociones
+label_to_text = {0: 'Ira', 1: 'Odio', 2: 'Miedo', 3: 'Felicidad', 4: 'Tristeza', 5: 'Sorpresa', 6: 'Neutral'}
 
 # Inicializar MediaPipe para la detección de rostros
 mp_face_mesh = mp.solutions.face_mesh
 mp_drawing = mp.solutions.drawing_utils
+
+# Procesar la imagen
+def preprocess_image(img_path, target_size):
+    # Abrir la imagen usando Pillow y convertir a escala de grises
+    img = Image.open(img_path).convert('L')
+    # Redimensionar la imagen al tamaño objetivo
+    img = img.resize(target_size)
+    # Convertir la imagen a un array de NumPy
+    img_array = np.array(img, dtype=np.float32)
+    # Normalizar los valores de los píxeles al rango [0, 1]
+    img_array = img_array / 255.0
+    # Expandir dimensiones para agregar el batch y los canales (1 para escala de grises)
+    img_array = np.expand_dims(img_array, axis=0)  # Agregar dimensión de lote
+    img_array = np.expand_dims(img_array, axis=-1)  # Agregar dimensión de canales
+    return img_array
 
 # Función para seleccionar 15 puntos clave relevantes
 def extract_key_points(landmarks, image_shape):
@@ -100,10 +121,39 @@ def puntos(img, img_str):
 def index():
     return render_template('index.html')
 
+@app.route('/borrar', methods=['POST'])
+def borrar():
+    # Obtener la ruta de la imagen desde el formulario
+    image_path = request.form.get('image_path')
+
+    # Verificar si el archivo existe antes de intentar eliminarlo
+    if image_path and os.path.exists(image_path):
+        try:
+            os.remove(image_path)  # Eliminar la imagen
+            print(f"Imagen {image_path} eliminada con éxito.")
+        except Exception as e:
+            print(f"Error al eliminar la imagen {image_path}: {str(e)}")
+    else:
+        print(f"La imagen {image_path} no existe o no se proporcionó una ruta válida.")
+
+    # Renderizar la plantilla después de eliminar la imagen
+    return render_template('index.html')
+
 @app.route('/procesar', methods=['POST'])
 def procesar():
     images_data = {}
     try:
+        if request.method == 'POST':
+            if 'file' not in request.files:
+                return redirect(request.url)
+            file = request.files['file']
+            if file.filename == '':
+                return redirect(request.url)
+            if file:
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+                file.save(file_path)
+
+    
         # Verificar si el archivo fue incluido en la solicitud
         if 'file' not in request.files:
             return 'No se ha proporcionado ningún archivo.'
@@ -154,11 +204,23 @@ def procesar():
             buf.seek(0)
             images_data[key] = base64.b64encode(buf.getvalue()).decode('ascii')
 
+        # Preprocesar imagen para emociones faciales
+        img_facialexpression = preprocess_image(file_path, target_size=(48, 48))
+        # Predecir con modelo
+        img_facialexpr_list = img_facialexpression.tolist()  # Convertir a lista
+        data = json.dumps({"signature_name": "serving_default", "instances": img_facialexpr_list})
+        #json_response2 = requests.post('http://localhost:8502/v1/models/saved_model/versions/2:predict', data=data, headers=headers, verify=False)
+        json_response2 = requests.post('https://tfexpressions-v1.onrender.com/v1/models/saved_model/versions/2:predict', data=data, headers=headers, verify=False)
+        json_response2.raise_for_status()  # Verificar si la solicitud fue exitosa
+        facial_express = np.argmax(json.loads(json_response2.text)['predictions'], axis=1)
+        emotion_text = label_to_text[int(facial_express)]  # Convertir a entero
+
+
     except Exception as e:
         return f"Error al procesar la imagen: {str(e)}"
 
     # Pasar las imágenes generadas al template
-    return render_template('resultado.html', images_data=images_data)
+    return render_template('resultado.html', emotion_label = emotion_text, images_data=images_data, image_path = file_path)
 
 
 
