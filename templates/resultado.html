@@ -31,7 +31,11 @@
             <a class="navbar-brand" href="{{ url_for('index') }}">Resultados</a>
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('index') }}">Volver</a>
+                    <form action="{{ url_for('borrar') }}" method="POST">
+                        <input type="hidden" name="image_path" value="{{ image_path }}">
+                        <button type="submit" class="btn btn-primary btn-block submit-btn mt-4">Volver</button>
+                    </form>
+                    
                 </li>
             </ul>
         </div>
@@ -39,7 +43,11 @@
 
     <!-- Content -->
     <div class="container">
-        <h1 class="text-center mb-4">Resultados del mapeo</h1>
+        <h1 class="text-center mb-4">Resultados de la emoción</h1>
+
+        <h2>La emoción es:</h2>
+        <h3>{{ emotion_label }}</h3>
+        <h2>Imagenes</h2>
         
         <div class="row">
             <div class="col-md-6 col-lg-3">
