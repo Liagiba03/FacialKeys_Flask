@@ -7,18 +7,14 @@
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f8f9fa; }
-        .container { max-width: 600px; }
-        .custom-file { border: 2px dashed #6c757d; padding: 30px; text-align: center; border-radius: 10px; background-color: #ffffff; }
-        .custom-file:hover { border-color: #007bff; }
-        .submit-btn { background-color: #007bff; border: none; padding: 10px 20px; border-radius: 25px; }
-        .submit-btn:hover { background-color: #0056b3; }
+        
     </style>
 </head>
 <body>
      <!-- Navbar -->
      <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">Subir imagen</a>
+            <h1 class="navbar-brand">Detección de emociones</h1>
         </div>
     </nav>
 
@@ -28,7 +24,6 @@
             <form action="{{ url_for('procesar') }}" method="POST" enctype="multipart/form-data" class="mt-4">
                 <div class="form-group custom-file">
                     <input type="file" name="file" class="form-control-file" accept="image/*" required>
-                    <p class="mt-2 text-muted">Arrastra o selecciona una imagen</p>
                 </div>
                 <button type="submit" class="btn btn-primary btn-block submit-btn mt-4">Subir Imagen</button>
             </form>
